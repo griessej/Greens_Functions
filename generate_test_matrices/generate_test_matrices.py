@@ -1,46 +1,51 @@
 """
-Minimal working example 
+Generate test matrices and 
 
 """
 import sys
 import numpy as np 
-
-# Import PETSc4py
-import petsc4py 
-petsc4py.init(sys.argv)
-from petsc4py import PETSc
-
-comm = PETSc.COMM_WORLD
-size = comm.getSize()
-rank = comm.getRank()
-
+import os 
+from scipy.sparse import csr_matrix, identity, save_npz
     
 if __name__ == "__main__":
-    # Variables
-    n = 100
+    n_col_rows = 1000
+    I = identity(n_col_rows, format="csr")
+    print("Format of identity matrix: ", I.getformat())
+    print("Nonzero entries: ", I.count_nonzero())
+    print("Density (number of nonzeros/n_col_rows^2): ", I.count_nonzero()/n_col_rows**2)
 
-    # Create a matrix A in parallel
-    A = PETSc.Mat().create(comm=comm)
-    A.setSizes((n, n))
-    A.setFromOptions()
-    A.setUp()
-    # 
-    Rstart, Rend = A.getOwnershipRange()
+    # Save the full matrix
+    directory = "full_matrix"
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    save_npz(directory + "/csr_slice_rows_0_to_{:d}.npz".format(n_col_rows), I)
 
-    # Print information
-    print("rank, size, start_frame, end_frame \n", rank, " / ", size, " / ", Rstart, " / ", Rend)
+    #  Two splits 
+    ranges = np.array([[0, 500],[500,1000]])
+    num_rows = ranges[-1, 1]
+    print("Number of rows: ", num_rows)
+    directory = "split_matrix_2_parts"
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    for rank, (start, end) in enumerate(ranges):
+        print("rank {:d}: rows {:d} -- {:d}".format(rank, start, end))
+        indptr_slice = I.indptr[start:end+1] - I.indptr[start]
+        indices_slice = I.indices[I.indptr[start]:I.indptr[end]]
+        data_slice = I.data[I.indptr[start]:I.indptr[end]]
+        csr_slice = csr_matrix((data_slice, indices_slice, indptr_slice), shape=(end - start, num_rows))
+        save_npz(directory + "/csr_slice_rows_{:d}_to_{:d}.npz".format(start, end), csr_slice)
 
-    # 
-    for i in range(Rstart, Rend):
-        if i == Rend-1:
-            A[i,i] = 2
-        else: 
-            A[i,i] = 1
-
-    A.assemble()
-
-    # Write a binary file in parallel 
-    viewer = PETSc.Viewer().createBinary("test", mode="w", comm=PETSc.COMM_WORLD)
-    viewer(A)
-    #viewer = PETSc.Viewer().createASCII("test", comm=PETSc.COMM_WORLD)
-    #A.view()
+    # Four splits 
+    ranges = np.array([[0, 250], [250, 500], [500, 750], [750,1000]])
+    num_rows = ranges[-1, 1]
+    print("Number of rows: ", num_rows)
+    directory = "split_matrix_4_parts"
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    for rank, (start, end) in enumerate(ranges):
+        print("rank {:d}: rows {:d} -- {:d}".format(rank, start, end))
+        indptr_slice = I.indptr[start:end+1] - I.indptr[start]
+        indices_slice = I.indices[I.indptr[start]:I.indptr[end]]
+        data_slice = I.data[I.indptr[start]:I.indptr[end]]
+        csr_slice = csr_matrix((data_slice, indices_slice, indptr_slice), shape=(end - start, num_rows))
+        save_npz(directory + "/csr_slice_rows_{:d}_to_{:d}.npz".format(start, end), csr_slice)
