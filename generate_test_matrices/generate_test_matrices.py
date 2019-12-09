@@ -5,7 +5,7 @@ Generate test matrices and
 import sys
 import numpy as np 
 import os 
-from scipy.sparse import csr_matrix, identity, save_npz
+from scipy.sparse import csr_matrix, identity, save_npz, random
     
 if __name__ == "__main__":
     n_col_rows = 1000
@@ -49,3 +49,10 @@ if __name__ == "__main__":
         data_slice = I.data[I.indptr[start]:I.indptr[end]]
         csr_slice = csr_matrix((data_slice, indices_slice, indptr_slice), shape=(end - start, num_rows))
         save_npz(directory + "/csr_slice_rows_{:d}_to_{:d}.npz".format(start, end), csr_slice)
+
+    # Generate a test matrix with density=0.01 and size 100
+    sparse_test_N100 = random(100, 100, density=0.01, format="csr")
+    directory = "sparse_matrix_density0.01_size100_split1"
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    save_npz(directory + "/csr_slice_rows_0_to_{:d}.npz".format(100), sparse_test_N100)
