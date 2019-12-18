@@ -9,12 +9,9 @@ PETSC_DIR       	= /home/fr/fr_fr/fr_jg1080/Libaries/petsc_3.12
 PETSC_ARCH      	= arch-linux-c-debug
 
 # Define source c file 
-SOURCESC_MUMPS		= compute_inverse_mumps.c
-SOURCESC_MatMatMul 	= compute_inverse_matmatmul.c
-SOURCESC_FACTOR		= test_factorization.c
-OBJECTFILE_MUMPS	= $(SOURCESC_MUMPS:.c=.o)
-OBJECTFILE_MatMatMul	= $(SOURCESC_MatMatMul:.c=.o)
-OBJECTFILE_FACTOR	= $(SOURCESC_FACTOR:.c=.o)
+SOURCESC		= save_example_matrix.c
+OBJECTFILE		= $(SOURCESC:.c=.o)
+
 
 # Additional flags for PETSc
 CFLAGS 			=
@@ -27,18 +24,12 @@ include ${PETSC_DIR}/lib/petsc/conf/variables
 include ${PETSC_DIR}/lib/petsc/conf/rules
 
 # Compile the c-code, link and create an exectueable
-# MUMPS usage of MumpsGetInverse
-compute_inverse_mumps: $(OBJECTFILE_MUMPS)  
-	-$(CLINKER) -o compute_inverse_mumps $(OBJECTFILE_MUMPS) $(PETSC_MAT_LIB)
+# Save matrix file 
+save_file: $(OBJECTFILE)  
+	-$(CLINKER) -o save_file $(OBJECTFILE) $(PETSC_MAT_LIB)
 	${RM} $(OBJECTFILE_MUMPS)
 
-# MatMatSolve usage
-compute_inverse_matmatmul: $(OBJECTFILE_MatMatMul)
-	-$(CLINKER) -o compute_inverse_matmatmul $(OBJECTFILE_MatMatMul) $(PETSC_MAT_LIB)
-	${RM} $(OBJECTFILE_MatMatMul)
-
-# Test Factorization 
-test_factorization: $(OBJECTFILE_FACTOR)
-	-$(CLINKER) -o test_factorization $(OBJECTFILE_FACTOR) $(PETSC_MAT_LIB)
-	${RM} $(OBJECTFILE_FACTOR)
+load_file: load_file.o
+	-$(CLINKER) -o load_file load_file.o $(PETSC_MAT_LIB)
+	${RM} load_file.o
 

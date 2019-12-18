@@ -21,6 +21,7 @@ output_filename.bin + output_filename.info: bin, txt
 
 Restrictions
 ----------
+None 
 
 Example usage
 ----------
@@ -49,7 +50,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("dynamical_matrix_files", help="Path to the files that contain the splitted dynamical matrix files.")
     parser.add_argument("dynamical_matrix_dimension", help="Dimension of the full dynamical matrix. If N is the number of particles dimension = 3N.", type=int)
-    parser.add_argument("output_filename", help="Name of the binary output file. ")
+    parser.add_argument("output_filename", help="Name of the binary output file.")
     args = parser.parse_args()
 
     """
