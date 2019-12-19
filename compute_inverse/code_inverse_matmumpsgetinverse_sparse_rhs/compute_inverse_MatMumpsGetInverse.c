@@ -7,9 +7,8 @@ static char help[] ="Compute a part of the inverse of a sparse matrix. This code
                 	-fout <input_file> : file to load \n \
 			-nrhs <numberofcolumns> : Number of columns to compute \n \
                         -displ <Bool>: Print matrices to terminal \n\
-			-checkResidual <Bool>: Check the residual R = A*A^-1 -diag(1) \n \
 		     Example usage: \n \
-		         mpiexec -np 2 ./compute_inverse_sparse_rhs -fin ../../convert_to_binary_petsc_matrix/identity_matrix_prefactor3_ncols10 -fout test -nrhs 5 -displ -checkResidual";
+		         mpiexec -np 2 ./compute_inverse_sparse_rhs -fin ../../convert_to_binary_petsc_matrix/main_off_diagonal_matrix_offValue2_ncols10_full/main_off_diagonal_matrix_offValue2_ncols10 -fout test -nrhs 5 -displ";
 
 #include <stdio.h>
 #include <petscmat.h>
@@ -23,9 +22,7 @@ int main(int argc, char **args){
     PetscViewer		fd; 					// Abstract PETSc object that helps view (in ASCII, binary, graphically etc) other PETSc objects
     PetscBool      	flg1,flg2;				// Logical variable. Actually an int in C.
     PetscBool		displ=PETSC_FALSE;			// Display matrices if set to True otherwise False
-    PetscBool		checkResidual=PETSC_FALSE;		// Check the residual of the the computed inverse 
     PetscInt		M,N,m,n,rstart,rend,nrhs,i,j;		// PETSc type that represents an integer, used primarily to represent size of arrays and indexing into arrays.
-    PetscReal      	norm,tol=PETSC_SQRT_MACHINE_EPSILON;    // PETSc type that represents a real number version of PetscScalar
     char		inputfile[1][PETSC_MAX_PATH_LEN]; 	// Input file name 
     char		outputfile[1][PETSC_MAX_PATH_LEN]; 	// Outputfile file name 
 #endif
@@ -45,8 +42,6 @@ int main(int argc, char **args){
 
     // Check if displ is set. If True the matrices are printed to the terminal
     ierr = PetscOptionsGetBool(NULL, NULL, "-displ", &displ, NULL);CHKERRQ(ierr);
-    // Check if checkResidual is set. If True compute the R = A*A^-1 -diag(1)
-    ierr = PetscOptionsGetBool(NULL, NULL, "-checkResidual", &checkResidual, NULL);CHKERRQ(ierr);
 
     // Load matrix A from file 
     ierr = PetscOptionsGetString(NULL, NULL, "-fin" ,inputfile[0], PETSC_MAX_PATH_LEN, &flg1);CHKERRQ(ierr);
@@ -75,14 +70,12 @@ int main(int argc, char **args){
     ierr = PetscSynchronizedFlush(PETSC_COMM_WORLD, PETSC_STDOUT);CHKERRQ(ierr);
     ierr = PetscPrintf(PETSC_COMM_WORLD, "---------------\n");CHKERRQ(ierr);
 
-    // Set the number of columns of the inverse to be computed. 
+    // We are intersted only in a part of the inverse especially in the columns/rows for (0,nrhs)/(0,nrhs)
     nrhs = N;
     ierr = PetscOptionsGetInt(NULL, NULL, "-nrhs", &nrhs, &flg2);CHKERRQ(ierr);
         
     // Create SpRHST for inv(A) with sparse RHS stored in the host.
     // PETSc does not support compressed column format which is required by MUMPS for sparse RHS matrix,
-    // thus user must create spRHST=spRHS^T and call MatMatTransposeSolve()
-    // User must create B^T in sparse compressed row format on the host processor and call MatMatTransposeSolve() to implement MUMPS' MatMatSolve().
     // MUMPS requires nrhs = N 
     ierr = MatCreate(PETSC_COMM_WORLD, &spRHST);CHKERRQ(ierr);
     if (!rank){
@@ -144,61 +137,6 @@ int main(int argc, char **args){
         ierr = PetscPrintf(PETSC_COMM_WORLD,"First %D columns of inv(A) with sparse RHS:\n", nrhs);
         ierr = MatView(spRHST,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
         ierr = PetscPrintf(PETSC_COMM_WORLD, "---------------\n");CHKERRQ(ierr);
-    }
-
-    if (checkResidual){
-        Mat AinvA,identityMatrix,invA;
-        PetscScalar p;
-        // Set up the identity matrix
-        ierr = MatCreate(PETSC_COMM_WORLD,&identityMatrix);CHKERRQ(ierr);
-        ierr = MatSetType(identityMatrix, MATAIJ);CHKERRQ(ierr);
-        ierr = MatSetSizes(identityMatrix,PETSC_DECIDE,PETSC_DECIDE,m*n,m*n);CHKERRQ(ierr);
-        ierr = MatSetFromOptions(identityMatrix);CHKERRQ(ierr);
-        ierr = MatSetUp(identityMatrix);CHKERRQ(ierr);
-
-        ierr = MatGetOwnershipRange(identityMatrix,&rstart,&rend);CHKERRQ(ierr);
-        if (rstart < nrhs  && rend <= nrhs){
-            for (i=rstart; i<rend; i++){
-                p = 1.0;
-                ierr = MatSetValues(identityMatrix, 1, &i, 1, &i, &p, INSERT_VALUES);CHKERRQ(ierr);
-            }
-        }
-        if(rstart < nrhs && rend >= nrhs){
-            for (i=rstart; i<nrhs; i++){
-                p = 1.0;
-                ierr = MatSetValues(identityMatrix, 1, &i, 1, &i, &p, INSERT_VALUES);CHKERRQ(ierr);
-            }
-         }
-         // Assemble matrix 
-        ierr = MatAssemblyBegin(identityMatrix, MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-        ierr = MatAssemblyEnd(identityMatrix, MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);  
-
-        /*
-        ierr = MatCreate(PETSC_COMM_WORLD,&invA);CHKERRQ(ierr);
-        ierr = MatSetType(invA, MATAIJ);CHKERRQ(ierr);
-        ierr = MatSetSizes(invA,PETSC_DECIDE,PETSC_DECIDE,m*n,m*n);CHKERRQ(ierr);
-        ierr = MatSetFromOptions(invA);CHKERRQ(ierr);
-        ierr = MatSetUp(invA);CHKERRQ(ierr);
-        ierr = MatAssemblyBegin(invA, MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-        ierr = MatAssemblyEnd(invA, MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-
-        // copy values
-        ierr = MatCopy(spRHST,invA,SAME_NONZERO_PATTERN);
- 
-        //ierr = MatConvert(spRHST,MATSAME,MAT_INITIAL_MATRIX,&invA);CHKERRQ(ierr); 
-*/
-        // Check the residual: R = A*A^-1 - diag(1)
-        ierr = PetscPrintf(PETSC_COMM_WORLD, "\nHere!\n");
-        ierr = MatMatMult(A,spRHST,MAT_INITIAL_MATRIX,2.0,&AinvA);CHKERRQ(ierr);
-        ierr = MatAXPY(AinvA,-1.0,identityMatrix,SAME_NONZERO_PATTERN);CHKERRQ(ierr); 
-        ierr = MatNorm(AinvA,NORM_INFINITY,&norm);CHKERRQ(ierr);
-        if (norm > tol){
-            ierr = PetscPrintf(PETSC_COMM_SELF,"Norm of the residual bigger than tolerance(=machine epsilon): %g\n",norm);CHKERRQ(ierr);
-        }
-        else{
-            ierr = PetscPrintf(PETSC_COMM_SELF,"Norm of the residual smaller than tolerance(=machine epsilon)");CHKERRQ(ierr);
-        }
-
     }
     
     // Write the inverse matrix to file
