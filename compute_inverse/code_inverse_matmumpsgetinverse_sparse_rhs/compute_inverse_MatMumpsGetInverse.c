@@ -8,7 +8,7 @@ static char help[] ="Compute a part of the inverse of a sparse matrix. This code
 			-nrhs <numberofcolumns> : Number of columns to compute \n \
                         -displ <Bool>: Print matrices to terminal \n\
 		     Example usage: \n \
-		         mpiexec -np 2 ./compute_inverse_sparse_rhs -fin ../../convert_to_binary_petsc_matrix/main_off_diagonal_matrix_offValue2_ncols10_full/main_off_diagonal_matrix_offValue2_ncols10 -fout test -nrhs 5 -displ";
+		          mpiexec -np 2 ./compute_inverse_MatMumpsGetInv -fin ../../convert_to_binary_petsc_matrix/main_off_diagonal_matrix_offValue2_ncols10_full/main_off_diagonal_matrix_offValue2_ncols10 -fout inverse_main_off_diagonal_matrix_offValue2_ncols10 -nrhs 5 -displ";
 
 #include <stdio.h>
 #include <petscmat.h>

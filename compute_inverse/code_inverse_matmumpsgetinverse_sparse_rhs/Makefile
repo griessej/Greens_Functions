@@ -5,8 +5,8 @@
 all: compute_inverse_MatMumpsGetInverse
 
 # Set PETSc_dir und arch 
-PETSC_DIR       	= /home/fr/fr_fr/fr_jg1080/Libaries/petsc_3.12_bugfix_MatMumpsGetInverse
-PETSC_ARCH      	= arch-linux-c-debug
+PETSC_DIR       	= /home/fr/fr_fr/fr_jg1080/Libaries/petsc_3.12.0_debugging_0
+PETSC_ARCH      	= arch-linux-c-opt
 
 # Define source c file 
 SOURCESC_MatMumpsGetInv	= compute_inverse_MatMumpsGetInverse.c
@@ -24,6 +24,6 @@ include ${PETSC_DIR}/lib/petsc/conf/rules
 
 # Compile the c-code, link and create an exectueable
 compute_inverse_MatMumpsGetInverse: $(OBJECTFILE_MatMumpsGetInv)
-	-$(CLINKER) -o compute_inverse_sparse_rhs $(OBJECTFILE_MatMumpsGetInv) $(PETSC_MAT_LIB)
+	-$(CLINKER) -o compute_inverse_MatMumpsGetInv $(OBJECTFILE_MatMumpsGetInv) $(PETSC_MAT_LIB)
 	${RM} $(OBJECTFILE_MatMumpsGetInv)
 
