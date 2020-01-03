@@ -22,23 +22,30 @@ Change to the PETSc directory and use the following command to configure
 For debugging and testing purposes the flag --with-debugging should be set to 1. Turning the debugging flag off increases the performance by a factor of two to three. For production runs i highly recommend truning it off! The fortan compilers and scalapack are needed for the compilation of MUMPS. MUMPS is necessary in order to use parallel direct solvers and therefore perform the LU-factorization in parallel. Furthermore it is needed to take advantage of the MUMPSGetInverse() function. This allows a parallel computation of a part of the inverse of a matrix. Compilation of fblaslapack turned out to be necessary since it was not correctly configred on NEMO and errors occur during tests. After the configure, make and test stage set the variables PETSC_DIR and PETSC_ARCH in your .bashrc script and make sure you are loading these paths when running on NEMO. Example:
 
 `export PETSC_DIR=/home/fr/fr_fr/fr_jg1080/Libaries/petsc_3.12.0_debugging_0`
+
 `export PETSC_ARCH=arch-linux-c-opt` 
 
-You can either use pip to install the petsc4py version using 
+We use a virtual python environment in order to set up the petsc4py version. Therefore we run 
 
-`pip install petsc4py`
+`python3 -m venv venv_petsc4py_slepc4py`
 
-or you can simply clone the repository and 
+and activate the virtual enviromnent using 
 
-`git clone https://bitbucket.org/petsc/petsc4py.git`
+`source bin/activate`
 
-and run 
+and install PETSc4Py using pip
 
-`python setup.py build`
+`pip3 install petsc4py`
 
-`python setup.py install`
+In summary the following paths and exports are necessary 
 
-Set the pythonpath either to the .local enviroment in your home folder or to the virtual environment.
+`module use /work/ws/nemo/fr_lp1029-IMTEK_SIMULATION-0/modulefiles/`
+`module load mpi4py/3.0.0-python-3.6.5-openmpi-3.1-gnu-7.3`
+`export PETSC_DIR=/work/ws/nemo/fr_wn1007-2019-09-23_HEA_greens_function-0/Tools/petsc_3.12.0_debugging_0`
+`export PETSC_ARCH=arch-linux-c-opt`
+`source /work/ws/nemo/fr_wn1007-2019-09-23_HEA_greens_function-0/Tools/venv_petsc4py-3.12.0_debugging_0/bin/activate`
+`export PYTHONPATH="/work/ws/nemo/fr_wn1007-2019-09-23_HEA_greens_function-0/Tools/venv_petsc4py-3.12.0_debugging_0/lib/python3.6/site-packages/:$PYTHONPATH"`
+
 
 # Workflow
 * Generate the matrix in scipy.sparse.csr_matrix format, split the matrix and save splitted files to drive.
