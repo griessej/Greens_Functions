@@ -1,23 +1,21 @@
 """
-Read a 
+Read a matrix in PETSc binary (matrix type aij) format and convert it to scipy.sparse.npz format.  
 
 Parameters
 ----------
-dynamical_matrix_files: scipy.sparse.npz files
-	Path to the splitted scipy.sparse.npz files.
-
-dynamical_matrix_dimension: int
-	Dimension of the full dynamical matrix.
+petsc_matrix: petsc binary matrix 
+    Path to the petsc matrix file in a binary format. 
 
 output_filename: str
-    Name of the binary output file. 
+    Name of the .npz output file.
+
+displ: bool
+    If set to True print the petsc matrix and the converted matrix to terminal. Should be only used for small matrices!!
 
 Output
 ----------
-output_filename.bin + output_filename.info: bin, txt
-    The bin file contains the dynamical matrix in a PETSc binary format. The .info file contains the size of the blocks to use 
-    if the matrix is read into a block oriented data structure.
-	
+scipy.sparse.npz file: 
+    scipy.sparse.npz file that contains the converted matrix. 
 
 Restrictions
 ----------
@@ -25,7 +23,7 @@ None
 
 Example usage
 ----------
-
+    python3 convert_petsc_matrix_to_npz.py ../compute_inverse/code_inverse_matmumpsgetinverse_sparse_rhs/inverse_main_off_diagonal_matrix_offValue2_ncols10 inverse_main_off_diagonal_matrix_offValue2_ncols10 --displ True
 
 """
 import sys
@@ -48,22 +46,36 @@ rank = comm.getRank()
 if __name__ == "__main__":
     # Get options from command line 
     parser = argparse.ArgumentParser()
-    parser.add_argument("petsc_matrix", help="Load this PETSc matrix and convert it to a numpy array.")
-    parser.add_argument("output_filename", help="Name of the .npy output file.")
-    parser.add_arguement("--displ", default=False, help="Print the loaded matrix to screen", type=bool)
+    parser.add_argument("petsc_matrix", help="Path to the PETSc matrix.")
+    parser.add_argument("output_filename", help="Name of the .npz output file.")
+    parser.add_argument("--displ", default=False, help="Print the loaded matrix to screen.", type=bool)
     args = parser.parse_args()
 
     """
     Load the matrix.
     """
     viewer = PETSc.Viewer().createBinary(args.petsc_matrix, "r")
-    petsc_matrix = PETSc.Mat().load(viewer) 
+    petsc_inverse_matrix = PETSc.Mat().load(viewer) 
 
     # Print the matrix to the screen
     if (args.displ != False):
-        petsc_matrix.view()
+        print("PETSc matrix: ")
+        petsc_inverse_matrix.view()
+    
+    """
+    Convert the PETSc aij matrix to a scipy.sparse.csr_matrix.
+    """
+    # Extract data, index pointer and indices from the PETSc matrix 
+    indptr, indices, data = petsc_inverse_matrix.getValuesCSR()
+    # Convert 
+    csr_inverse_matrix = scipy.sparse.csr_matrix((data, indices, indptr))
 
+    # Print the matrix to the screen
+    if (args.displ != False):
+        print("\nScipy.sparse.csr_matrix: ")
+        print(csr_inverse_matrix)
+    
     # Save it as a binary array 
-    np.save(args.output_filename, petsc_matrix)
+    scipy.sparse.save_npz(args.output_filename, csr_inverse_matrix)
 
 
