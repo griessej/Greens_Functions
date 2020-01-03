@@ -58,4 +58,7 @@ In summary the following paths and exports are necessary
 * Read the matrix in a c-code and compute part of the inverse.
 
 # Generate test matrices 
-We consider the easiest excample of a matrix inversion, namely the identity matrix I=diag[1]. The size of the matrix is dim=[1000,1000] and use 1,2 and 4 cores. 
+For test purposes and scaling tests for the matrix inversion we use three different test cases.
+* Diagonal matrix with d_1=d_2=d_3=d_4=d where [[d_1,0,0,0],[0,d_2,0,0],[0,0,d_3,0],[0,0,0,d_4]]^-1 = [[1/d_1,0,0,0],[0,1/d_2,0,0],[0,0,1/d_3,0],[0,0,0,1/d_4]]
+* Matrix with ones on the main daigaonal and one column or row unequal to zero [[1,a_1,0,0],[0,1,0,0],[0,a_2,1,0],[0,a_3,0,1]]^-1 = [[1,-a_1,0,0],[0,1,0,0],[0,-a_2,1,0],[0,-a_3,0,1]]
+* Matrix with ones on the main diagonal and first off-diagonal unequal to zero. a_3=a_2=a_1=a, [[1,-a_1,0,0],[0,1,-a_2,0],[0,0,1,-a_3],[0,0,0,1]]^-1 = [[1,a_3,a_3a_2,a_3a_2a_1],[0,1,a_2,a_2a_1],[0,0,1,a_1],[0,0,0,1]] 
