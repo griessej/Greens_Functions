@@ -40,10 +40,15 @@ and install PETSc4Py using pip
 In summary the following paths and exports are necessary 
 
 `module use /work/ws/nemo/fr_lp1029-IMTEK_SIMULATION-0/modulefiles/`
+
 `module load mpi4py/3.0.0-python-3.6.5-openmpi-3.1-gnu-7.3`
+
 `export PETSC_DIR=/work/ws/nemo/fr_wn1007-2019-09-23_HEA_greens_function-0/Tools/petsc_3.12.0_debugging_0`
+
 `export PETSC_ARCH=arch-linux-c-opt`
+
 `source /work/ws/nemo/fr_wn1007-2019-09-23_HEA_greens_function-0/Tools/venv_petsc4py-3.12.0_debugging_0/bin/activate`
+
 `export PYTHONPATH="/work/ws/nemo/fr_wn1007-2019-09-23_HEA_greens_function-0/Tools/venv_petsc4py-3.12.0_debugging_0/lib/python3.6/site-packages/:$PYTHONPATH"`
 
 
