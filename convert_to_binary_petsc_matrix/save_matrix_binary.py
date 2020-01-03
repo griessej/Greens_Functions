@@ -1,13 +1,13 @@
 """
-Read and assemble a Petsc matrix in parallel. Save it in order to read the file in the c code of PETSc.
+Read and assemble a Petsc matrix in parallel. Save it in order to read the file in the c code of PETSc to compute the inverse.
 
 Parameters
 ----------
 dynamical_matrix_files: scipy.sparse.npz files
-	Path to the splitted scipy.sparse.npz files.
+    Path to the splitted scipy.sparse.npz files.
 
 dynamical_matrix_dimension: int
-	Dimension of the full dynamical matrix.
+    Dimension of the full dynamical matrix.
 
 output_filename: str
     Name of the binary output file. 
