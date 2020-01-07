@@ -5,7 +5,8 @@ static char help[] ="Compute the residual R= A*A^-1 - diag(1).\n \
 			-nrhs <numberofcolumns> : Number of columns to compute \n \
                         -displ <Bool>: Print matrices to terminal \n\
 		     Example usage: \n \
-		          mpiexec -np 2 compute_residual_of_inverse -fin_A ../convert_to_binary_petsc_matrix/main_off_diagonal_matrix_offValue2_ncols10_full/main_off_diagonal_matrix_offValue2_ncols10 -fin_Ainv ../compute_inverse/code_inverse_matmumpsgetinverse_sparse_rhs/test -nrhs 5 -displ";
+		        mpiexec -np 2 compute_residual_of_inverse -fin_A ../convert_to_binary_petsc_matrix/main_off_diagonal_matrix_offValue2_ncols10_full/main_off_diagonal_matrix_offValue2_ncols10 -fin_Ainv ../compute_inverse/code_inverse_matmumpsgetinverse_sparse_rhs/inverse_main_off_diagonal_matrix_offValue2_ncols10 -nrhs 10 -displ
+";
 
 #include <stdio.h>
 #include <petscmat.h>

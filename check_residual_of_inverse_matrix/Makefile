@@ -5,8 +5,8 @@
 all: compute_residual_of_inverse
 
 # Set PETSc_dir und arch 
-PETSC_DIR       	= /home/fr/fr_fr/fr_jg1080/Libaries/petsc_3.12_bugfix_MatMumpsGetInverse
-PETSC_ARCH      	= arch-linux-c-debug
+PETSC_DIR       	= /home/fr/fr_fr/fr_jg1080/Libaries/petsc_3.12.0_debugging_0
+PETSC_ARCH      	= arch-linux-c-opt
 
 # Define source c file 
 SOURCESC_Residual	= compute_residual_of_inverse.c

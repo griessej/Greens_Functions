@@ -64,6 +64,9 @@ In summary the following paths and exports are necessary
 * Read the matrix in a c-code and compute part of the inverse.
 * Convert the PETSc matrix to a scipy.sparse.npz matrix.
 
+# Check the inverse 
+In order to check the tolerance of the computed inverse we compute the Residual R= A*A^-1 - diag(1), where A is the matrix and A^-1 is its inverse.
+
 # Test matrices 
 For test purposes and scaling tests for the matrix inversion we use three different test cases.
 * Diagonal matrix with d_1=d_2=d_3=d_4=d where [[d_1,0,0,0],[0,d_2,0,0],[0,0,d_3,0],[0,0,0,d_4]]^-1 = [[1/d_1,0,0,0],[0,1/d_2,0,0],[0,0,1/d_3,0],[0,0,0,1/d_4]]
