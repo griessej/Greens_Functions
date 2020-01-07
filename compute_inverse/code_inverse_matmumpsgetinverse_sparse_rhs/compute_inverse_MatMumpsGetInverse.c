@@ -11,7 +11,7 @@ static char help[] ="Compute a part of the inverse of a sparse matrix. This code
 		     Example usage: \n \
 		          mpiexec -np 2 ./compute_inverse_MatMumpsGetInv -fin ../../convert_to_binary_petsc_matrix/main_off_diagonal_matrix_offValue2_ncols10_full/main_off_diagonal_matrix_offValue2_ncols10 -fout inverse_main_off_diagonal_matrix_offValue2_ncols10 -rhs_row 5 -rhs_col 5 -displ \n\
 		     Debugging: \n \
-		         Prifiling is done by using -log_view";
+		         Profiling can done by using -log_view";
 
 #include <stdio.h>
 #include <petscmat.h>
@@ -98,16 +98,16 @@ int main(int argc, char **args){
     if (!rank){
         // Value to fill into the matrix 
         PetscScalar v[rhs_col];
-        // Global column indices
+        // Global col indices
         PetscInt idxn[rhs_col];
         // Fill value array and create indices of columns and rows
         for(j = 0; j < rhs_col; j++){
             v[j] = 1.0; 
             idxn[j] = j;
         }  
-        // Fill the upper left part of the matrix with 1. Indicates that these entries of the inverse are computed.
+        // Fill the upper left part of the matrix with 1. Be careful, we fill the TRANSPOSED MATRIX!! Due to compressed col format instead of compressed row format!
         for(i=0;i<rhs_row;i++){
-            ierr = MatSetValues(spRHS,1,&i,rhs_col,idxn,v,INSERT_VALUES);CHKERRQ(ierr);     
+            ierr = MatSetValues(spRHS,rhs_col,idxn,1,&i,v,INSERT_VALUES);CHKERRQ(ierr);       
         }
     }
     ierr = MatAssemblyBegin(spRHS,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
@@ -116,6 +116,8 @@ int main(int argc, char **args){
     // Print matrix spRHST 
     if (displ){
         ierr = PetscPrintf(PETSC_COMM_WORLD, "\n---------------\n");CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD,"If requested entries of the matrix are rectangular, this matrix is transposed!!! ");CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD,"Since MUMPS uses commpressed column format, instead of petsc commpressed row format! \n");CHKERRQ(ierr);
         ierr = PetscPrintf(PETSC_COMM_WORLD,"Matrix spRHS:\n");CHKERRQ(ierr);
         ierr = MatView(spRHS, PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
         ierr = PetscPrintf(PETSC_COMM_WORLD, "\n");CHKERRQ(ierr);
