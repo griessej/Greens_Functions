@@ -59,9 +59,10 @@ In summary the following paths and exports are necessary
 * Convert the PETSc matrix to a scipy.sparse.npz matrix.
 
 # Workflow for inversion of the dynamical matrix 
-* Generate the matrix in scipy.sparse.csr_matrix format, split the matrix and save splitted files to drive.
-* Convert the matrices to PETSc binary format und save. 
+* Compute the dynamical matrix in scipy.sparse.csr_matrix format. If necessary split the matrix and save splitted files (This is in general not needed!)
+* Convert the matrix to the PETSc binary format. 
 * Read the matrix in a c-code and compute part of the inverse.
+* Convert the PETSc matrix to a scipy.sparse.npz matrix.
 
 # Test matrices 
 For test purposes and scaling tests for the matrix inversion we use three different test cases.

@@ -1,5 +1,6 @@
 """
-Read and assemble a Petsc matrix in parallel. Save it in order to read the file in the c code of PETSc to compute the inverse.
+Read and assemble a Petsc matrix in parallel. Save it in order to read the file in the c-code of PETSc to compute the inverse.
+Run on one processor to read the full matrix, run on m processors to read slices of the matrix, combine them and save.
 
 Parameters
 ----------
@@ -11,6 +12,9 @@ dynamical_matrix_dimension: int
 
 output_filename: str
     Name of the binary output file. 
+
+--displ: bool
+    Print the converted matrix to screen.    
 
 Output
 ----------
@@ -25,7 +29,7 @@ None
 
 Example usage
 ----------
-
+python3 save_matrix_binary.py ../generate_test_matrices/main_off_diagonal_matrix_offValue2_ncols10_full/ 10 test --displ True
 
 """
 import sys
@@ -51,6 +55,7 @@ if __name__ == "__main__":
     parser.add_argument("dynamical_matrix_files", help="Path to the files that contain the splitted dynamical matrix files.")
     parser.add_argument("dynamical_matrix_dimension", help="Dimension of the full dynamical matrix. If N is the number of particles dimension = 3N.", type=int)
     parser.add_argument("output_filename", help="Name of the binary output file.")
+    parser.add_argument("--displ", default=False, help="Print the converted matrix to screen.", type=bool)
     args = parser.parse_args()
 
     """
@@ -79,9 +84,10 @@ if __name__ == "__main__":
     A = PETSc.Mat().createAIJ(size=(args.dynamical_matrix_dimension, args.dynamical_matrix_dimension), csr=csr, comm=comm)
     A.assemble()
 
+    
     # Print the matrix to the terminal 
-    # Deactivate for large matrices!
-    A.view()
+    if (args.displ != False):
+        A.view()
 
     # Write a binary file in parallel 
     viewer = PETSc.Viewer().createBinary(args.output_filename, mode="w", comm=PETSc.COMM_WORLD)
