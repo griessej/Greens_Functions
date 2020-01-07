@@ -78,6 +78,9 @@ if __name__ == "__main__":
     # Load the corresponding part of the dynamical matrix 
     D_filename = args.dynamical_matrix_files + "/csr_slice_rows_{:d}_to_{:d}.npz".format(R_start, R_end)
     D_sparse_mn = scipy.sparse.load_npz(D_filename)
+    # Print current format and convert to csr
+    print("Current format of sparse matrix, convert to csr: ", D_sparse_mn.getformat())
+    D_sparse_mn = D_sparse_mn.tocsr()
     csr = (D_sparse_mn.indptr, D_sparse_mn.indices, D_sparse_mn.data)
 
     # Assemble the dynamical matrix as PETSc matrix 
