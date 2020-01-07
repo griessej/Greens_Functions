@@ -60,7 +60,7 @@ def main():
         scipy_mat = scipy_mat.tocsr()
     print("New format of sparse matrix: ", scipy_mat.getformat())
     csr = (scipy_mat.indptr, scipy_mat.indices, scipy_mat.data)
-    assert scipy_mat[0] == scipy_mat[1]
+    assert scipy_mat.shape[0] == scipy_mat.shape[1]
     mat_size = scipy_mat.shape[0]
     # Assemble the dynamical matrix as PETSc matrix
     petsc_mat = PETSc.Mat().createAIJ(
