@@ -11,7 +11,7 @@ from scipy.sparse import csr_matrix, identity, save_npz, diags
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("n_cols_rows", help="Number of columns and rows of the test matrix.", type=int, default=1000)
-    parser.add_argument("off_diagonal_value", help="Value on the first off_diagonal.", type=int, default=1)
+    parser.add_argument("off_diagonal_value", help="Value on the first off_diagonal.", type=float, default=1)
     args = parser.parse_args()
 
     off_diagonal = -np.repeat(args.off_diagonal_value, args.n_cols_rows)
