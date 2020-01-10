@@ -84,6 +84,11 @@ int main(int argc, char **args){
     ierr = PetscOptionsGetInt(NULL, NULL, "-colIndex_low", &colIndex_low, &flg2);CHKERRQ(ierr);
     ierr = PetscOptionsGetInt(NULL, NULL, "-colIndex_high", &colIndex_high, &flg3);CHKERRQ(ierr);
     ierr = PetscOptionsGetInt(NULL, NULL, "-nrhs_row", &nrhs_row, &flg4);CHKERRQ(ierr);
+
+    // Print information
+    ierr = PetscPrintf(PETSC_COMM_WORLD, "\ncolIndex_low: %i \n", colIndex_low);CHKERRQ(ierr);
+    ierr = PetscPrintf(PETSC_COMM_WORLD, "\ncolIndex_high: %i \n", colIndex_high);CHKERRQ(ierr);
+    ierr = PetscPrintf(PETSC_COMM_WORLD, "\nrhs_row: %i \n", nrhs_row);CHKERRQ(ierr);
         
     // Create SpRHST for inv(A) with sparse RHS stored in the host.
     // PETSc does not support compressed column format which is required by MUMPS for sparse RHS matrix and furthermore MUMPS requires nrhs=N
