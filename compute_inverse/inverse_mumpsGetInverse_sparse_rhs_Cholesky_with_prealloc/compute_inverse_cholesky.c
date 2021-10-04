@@ -108,11 +108,11 @@ int main(int argc, char **args){
     total_nz = rhs_row * rhs_col;
 
     // Allocate the solution matrix 
-    ierr = MatCreate(PETSC_COMM_WORLD,&X);CHKERRQ(ierr);
-    ierr = MatSetSizes(X,PETSC_DECIDE,PETSC_DECIDE,M,N);CHKERRQ(ierr);
-    ierr = MatSetType(X,MATAIJ);CHKERRQ(ierr);
-    ierr = MatSetFromOptions(X);CHKERRQ(ierr);
-    ierr = MatSetUp(X);CHKERRQ(ierr);
+    //ierr = MatCreate(PETSC_COMM_WORLD,&X);CHKERRQ(ierr);
+    //ierr = MatSetSizes(X,PETSC_DECIDE,PETSC_DECIDE,M,N);CHKERRQ(ierr);
+    //ierr = MatSetType(X,MATAIJ);CHKERRQ(ierr);
+    //ierr = MatSetFromOptions(X);CHKERRQ(ierr);
+    //ierr = MatSetUp(X);CHKERRQ(ierr);
         
     // spRHST is a sparse matrix that stores the transpose of the inverse.
     // Notice that MUMPS expects the right hand side to be in compressed
