@@ -27,6 +27,7 @@ int main(int argc, char **args){
     PetscMPIInt     size,rank;               
 #if defined(PETSC_HAVE_MUMPS)
     Mat             A,F,spRHS;               // PETSc matrices
+    MatInfo         matinfo;
     PetscViewer     fd;                      
     PetscBool       flg;          
     PetscBool       displ=PETSC_FALSE;       // Display matrices if set to True otherwise False
@@ -36,7 +37,10 @@ int main(int argc, char **args){
     PetscInt        rhs_col,rhs_row;         // Number of columns and rows on RHS (right-hand side)
     PetscInt        total_nz;                // Number of nonzero values to be pre-allocated in spRHS
     PetscBool       prealloc=PETSC_TRUE;     // Display matrices if set to True otherwise False
+    PetscReal       symtol=PETSC_SQRT_MACHINE_EPSILON;
     MatType mtype;
+    MatFactorInfo   factinfo;
+    IS              isrow,iscol;            /* row and column permutations */
     char inputfile[1][PETSC_MAX_PATH_LEN];   // Input file name 
     char outputfile[1][PETSC_MAX_PATH_LEN];  // Outputfile file name 
 #endif
@@ -66,7 +70,10 @@ int main(int argc, char **args){
     ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD, inputfile[0], FILE_MODE_READ, &fd);CHKERRQ(ierr);
     ierr = MatCreate(PETSC_COMM_WORLD,&A);CHKERRQ(ierr);
     ierr = MatSetType(A, MATAIJ);CHKERRQ(ierr);  
+    //ierr = MatSetOption(A, MAT_SYMMETRIC, PETSC_TRUE);CHKERRQ(ierr);  
     ierr = MatLoad(A, fd);CHKERRQ(ierr);
+
+    //ierr = PetscPrintf("The size of PetscInt is %d\n", sizeof(PetscInt));CHKERRQ(ierr);
 
     // Print matrix A if -displ is set. 
     if (displ){
@@ -83,6 +90,8 @@ int main(int argc, char **args){
     if (M != N){
         SETERRQ(PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, "ERROR: input matrix must be square!");
     }
+    //ierr = MatIsSymmetric(A,symtol,&flg);CHKERRQ(ierr);
+    //if (!flg) SETERRQ(PETSC_COMM_SELF,PETSC_ERR_ARG_WRONGSTATE,"A must be symmetric for Cholesky factorization");
     ierr = MatGetOwnershipRange(A,&rstart,&rend);CHKERRQ(ierr);
     ierr = PetscPrintf(PETSC_COMM_WORLD, "Ownership ranges for input matrix A:\n");CHKERRQ(ierr);
     ierr = PetscPrintf(PETSC_COMM_WORLD, "rank, size, rstart, rend, M, N, m, n\n");CHKERRQ(ierr);
@@ -105,14 +114,20 @@ int main(int argc, char **args){
     else{
         ierr = PetscPrintf(PETSC_COMM_WORLD,"Will calculate all %d rows of the inverse of A.\n", rhs_row);
     }
-    total_nz = rhs_row * rhs_col;
-
-    // Allocate the solution matrix 
-    //ierr = MatCreate(PETSC_COMM_WORLD,&X);CHKERRQ(ierr);
-    //ierr = MatSetSizes(X,PETSC_DECIDE,PETSC_DECIDE,M,N);CHKERRQ(ierr);
-    //ierr = MatSetType(X,MATAIJ);CHKERRQ(ierr);
-    //ierr = MatSetFromOptions(X);CHKERRQ(ierr);
-    //ierr = MatSetUp(X);CHKERRQ(ierr);
+    total_nz = rhs_col;
+    MatGetInfo(A,MAT_LOCAL,&matinfo);
+    if (!rank){
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo of A on rank 0:\n");CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.block_size       : %f\n", matinfo.block_size       );CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.nz_allocated     : %f\n", matinfo.nz_allocated     );CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.nz_used          : %f\n", matinfo.nz_used          );CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.nz_unneeded      : %f\n", matinfo.nz_unneeded      );CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.assemblies       : %f\n", matinfo.assemblies       );CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.mallocs          : %f\n", matinfo.mallocs          );CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.fill_ratio_given : %f\n", matinfo.fill_ratio_given );CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.fill_ratio_needed: %f\n", matinfo.fill_ratio_needed);CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.factor_mallocs   : %f\n", matinfo.factor_mallocs   );CHKERRQ(ierr);
+    }
         
     // spRHST is a sparse matrix that stores the transpose of the inverse.
     // Notice that MUMPS expects the right hand side to be in compressed
@@ -122,18 +137,26 @@ int main(int argc, char **args){
     //
     // MUMPS requires the RHS to exist on MPI rank 0.
     ierr = MatCreate(PETSC_COMM_WORLD, &spRHS);CHKERRQ(ierr);
-    ierr = MatSetSizes(spRHS,PETSC_DECIDE,PETSC_DECIDE,M,N);CHKERRQ(ierr);
+    if (!rank){
+        //ierr = MatSetSizes(spRHS,M,N,PETSC_DECIDE,PETSC_DECIDE);CHKERRQ(ierr);
+        ierr = MatSetSizes(spRHS,M,N,M,N);CHKERRQ(ierr);
+    }
+    else{
+        //ierr = MatSetSizes(spRHS,0,0,PETSC_DECIDE,PETSC_DECIDE);CHKERRQ(ierr);
+        ierr = MatSetSizes(spRHS,0,0,M,N);CHKERRQ(ierr);
+    }
     ierr = MatSetType(spRHS,MATAIJ);CHKERRQ(ierr);
     ierr = MatSetFromOptions(spRHS);CHKERRQ(ierr);
     if (prealloc){
-        ierr = PetscPrintf(PETSC_COMM_WORLD,"Pre-allocating right hand side matrix spRHS.\n");
+        ierr = PetscPrintf(PETSC_COMM_WORLD,"Pre-allocating right hand side matrix spRHS, total_nz = %d\n",total_nz);
         if (!rank){
-            ierr = MatMPIAIJSetPreallocation(spRHS, total_nz,NULL, 0,NULL);CHKERRQ(ierr); 
+            ierr = MatMPIAIJSetPreallocation(spRHS, rhs_col,NULL, 0,NULL);CHKERRQ(ierr); 
         }
         else{
             ierr = MatMPIAIJSetPreallocation(spRHS, 0,NULL, 0,NULL);CHKERRQ(ierr); 
         }
     }
+    ierr = PetscPrintf(PETSC_COMM_WORLD,"Calling MatSetUp on spRHS.\n");
     ierr = MatSetUp(spRHS);CHKERRQ(ierr);
     ierr = PetscPrintf(PETSC_COMM_WORLD,"Filling right hand side matrix spRHS.\n");
     if (!rank){
@@ -160,6 +183,19 @@ int main(int argc, char **args){
     ierr = PetscPrintf(PETSC_COMM_WORLD, "spRHS is of type %s\n", mtype);CHKERRQ(ierr);
     ierr = MatGetSize(spRHS, &spRHSM, &spRHSN);CHKERRQ(ierr);
     ierr = PetscPrintf(PETSC_COMM_WORLD, "spRHS has shape (%d, %d)\n", spRHSM, spRHSN);CHKERRQ(ierr);
+    MatGetInfo(spRHS,MAT_LOCAL,&matinfo);
+    if (!rank){
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo of spRHS on rank 0:\n");CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.block_size       : %f\n", matinfo.block_size       );CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.nz_allocated     : %f\n", matinfo.nz_allocated     );CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.nz_used          : %f\n", matinfo.nz_used          );CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.nz_unneeded      : %f\n", matinfo.nz_unneeded      );CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.assemblies       : %f\n", matinfo.assemblies       );CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.mallocs          : %f\n", matinfo.mallocs          );CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.fill_ratio_given : %f\n", matinfo.fill_ratio_given );CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.fill_ratio_needed: %f\n", matinfo.fill_ratio_needed);CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.factor_mallocs   : %f\n", matinfo.factor_mallocs   );CHKERRQ(ierr);
+    }
 
     if (displ){
         ierr = PetscPrintf(PETSC_COMM_WORLD,"Below is the right hand side matrix spRHS. Note that this matrix will have the same shape as the transpose of the requested block of the inverse.\n");CHKERRQ(ierr);
@@ -167,16 +203,49 @@ int main(int argc, char **args){
         ierr = MatView(spRHS, PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
     }
 
-    ierr = PetscPrintf(PETSC_COMM_WORLD, "Computing %i columns and %i rows of the inverse using Cholesky factorization in MUMPS.\n", rhs_col, rhs_row);CHKERRQ(ierr);
+    //ierr = MatFactorInfoInitialize(&factinfo);CHKERRQ(ierr);
+    //factinfo.fill=5.0;
+    //ierr = PetscPrintf(PETSC_COMM_WORLD, "MatFactorInfo.diagonal_fill: %f\n", factinfo.diagonal_fill);CHKERRQ(ierr);
+    //ierr = PetscPrintf(PETSC_COMM_WORLD, "MatFactorInfo.usedt:         %f\n", factinfo.usedt);CHKERRQ(ierr);
+    //ierr = PetscPrintf(PETSC_COMM_WORLD, "MatFactorInfo.dt:            %f\n", factinfo.dt);CHKERRQ(ierr);
+    //ierr = PetscPrintf(PETSC_COMM_WORLD, "MatFactorInfo.dtcol:         %f\n", factinfo.dtcol);CHKERRQ(ierr);
+    //ierr = PetscPrintf(PETSC_COMM_WORLD, "MatFactorInfo.fill:          %f\n", factinfo.fill);CHKERRQ(ierr);
+    //ierr = PetscPrintf(PETSC_COMM_WORLD, "MatFactorInfo.levels:        %f\n", factinfo.levels);CHKERRQ(ierr);
+    //ierr = PetscPrintf(PETSC_COMM_WORLD, "MatFactorInfo.pivotinblocks: %f\n", factinfo.pivotinblocks);CHKERRQ(ierr);
+    //ierr = PetscPrintf(PETSC_COMM_WORLD, "MatFactorInfo.zeropivot:     %f\n", factinfo.zeropivot);CHKERRQ(ierr);
+    //ierr = PetscPrintf(PETSC_COMM_WORLD, "MatFactorInfo.shifttype:     %f\n", factinfo.shifttype);CHKERRQ(ierr);
+    //ierr = PetscPrintf(PETSC_COMM_WORLD, "MatFactorInfo.shiftamount:   %f\n", factinfo.shiftamount);CHKERRQ(ierr);
+    ierr = PetscPrintf(PETSC_COMM_WORLD, "Computing %i columns and %i rows of the inverse using Cholesky factorization in MUMPS.\n", 
+        rhs_col, rhs_row);CHKERRQ(ierr);
+    //ierr = PetscPrintf(PETSC_COMM_WORLD, "Getting ordering isrow/iscol\n");CHKERRQ(ierr);
+    //ierr = MatGetOrdering(A,MATORDERINGNATURAL, &isrow, &iscol);CHKERRQ(ierr);
+    //ierr = PetscPrintf(PETSC_COMM_WORLD, "Reordering for nonzero diagonal\n");CHKERRQ(ierr);
+    //ierr = MatReorderForNonzeroDiagonal(A,1.e-8,isrow,iscol);CHKERRQ(ierr);
     ierr = MatGetFactor(A, MATSOLVERMUMPS, MAT_FACTOR_CHOLESKY, &F);CHKERRQ(ierr);
     ierr = PetscPrintf(PETSC_COMM_WORLD, "Performing symbolic Cholesky factorization with MatCholeskyFactorSymbolic\n");CHKERRQ(ierr);
+    //ierr = MatCholeskyFactorSymbolic(F, A, iscol, &factinfo);CHKERRQ(ierr);
+    //ierr = MatCholeskyFactorSymbolic(F, A, NULL, &factinfo);CHKERRQ(ierr);
     ierr = MatCholeskyFactorSymbolic(F, A, NULL, NULL);CHKERRQ(ierr);
     ierr = PetscPrintf(PETSC_COMM_WORLD, "Performing numeric Cholesky factorization with MatCholeskyFactorNumeric\n");CHKERRQ(ierr);
+    //ierr = MatCholeskyFactorNumeric(F, A, &factinfo);CHKERRQ(ierr);
     ierr = MatCholeskyFactorNumeric(F, A, NULL);CHKERRQ(ierr);
     ierr = MatGetType(F, &mtype);
     ierr = PetscPrintf(PETSC_COMM_WORLD, "Factor matrix F is of type %s\n", mtype);CHKERRQ(ierr);
     ierr = MatGetSize(F, &FM, &FN);CHKERRQ(ierr);
     ierr = PetscPrintf(PETSC_COMM_WORLD, "Factor matrix F has shape (%d, %d)\n", FM, FN);CHKERRQ(ierr);
+    MatGetInfo(F,MAT_LOCAL,&matinfo);
+    if (!rank){
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo of F on rank 0:\n");CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.block_size       : %f\n", matinfo.block_size       );CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.nz_allocated     : %f\n", matinfo.nz_allocated     );CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.nz_used          : %f\n", matinfo.nz_used          );CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.nz_unneeded      : %f\n", matinfo.nz_unneeded      );CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.assemblies       : %f\n", matinfo.assemblies       );CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.mallocs          : %f\n", matinfo.mallocs          );CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.fill_ratio_given : %f\n", matinfo.fill_ratio_given );CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.fill_ratio_needed: %f\n", matinfo.fill_ratio_needed);CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "MatInfo.factor_mallocs   : %f\n", matinfo.factor_mallocs   );CHKERRQ(ierr);
+    }
 
     // Create the tranpose of the right hand side matrix spRHS. From the manual: "The
     // transpose A' is NOT actually formed! Rather the new matrix object performs the
@@ -188,6 +257,13 @@ int main(int argc, char **args){
     // Get user-specified set of entries in inverse of A
     ierr = PetscPrintf(PETSC_COMM_WORLD, "Computing inverse of A from factor matrix F using MatMumpsGetInverse. Storing result in spRHST.\n");CHKERRQ(ierr);
     ierr = MatMumpsGetInverse(F,spRHST);CHKERRQ(ierr);
+
+    if (displ){
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "\n---------------\n");CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD,"spRHST");CHKERRQ(ierr);
+        ierr = MatView(spRHST, PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "\n---------------\n");CHKERRQ(ierr);
+    }
 
     // Compute the transpose of the matrix
     ierr = MatTranspose(spRHS, MAT_INPLACE_MATRIX, &spRHS);CHKERRQ(ierr);
