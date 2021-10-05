@@ -5,8 +5,8 @@
 all: compute_inverse_cholesky
 
 # Set PETSc_dir und arch 
-PETSC_DIR       	= $PETSC_DIR
-PETSC_ARCH      	= $PETSC_ARCH
+PETSC_DIR       	= ${PETSC_DIR}
+PETSC_ARCH      	= ${PETSC_ARCH}
 
 # Define source c file 
 SOURCESC_cholesky	= compute_inverse_cholesky.c
