@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Generate an identity matrix with a given number of rows and columns. Save the full as well as the splitted identity matrix to file.
 

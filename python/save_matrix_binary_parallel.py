@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Read and assemble a Petsc matrix in parallel. Save it in order to read the file in the c-code of PETSc to compute the inverse.
 Run on one processor to read the full matrix, run on m processors to read slices of the matrix, combine them and save.

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Convert a binary scipy sparse matrix file into a petsc sparse matrix file.
 
 Output

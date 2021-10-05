@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Read a matrix in PETSc binary (matrix type aij) format and convert it to scipy.sparse.npz format.  
 

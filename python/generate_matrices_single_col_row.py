@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Generate a matrix with a given number of rows and columns. 
 On the main diagonal are ones and one specified row or column has values unequal to zero. 
