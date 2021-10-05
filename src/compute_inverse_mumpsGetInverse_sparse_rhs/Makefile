@@ -5,8 +5,8 @@
 all: compute_inverse_MatMumpsGetInverse
 
 # Set PETSc_dir und arch 
-PETSC_DIR       	= /home/fr/fr_fr/fr_jg1080/Libaries/petsc_3.12.0_debugging_0
-PETSC_ARCH      	= arch-linux-c-opt
+PETSC_DIR       	= $PETSC_DIR
+PETSC_ARCH      	= $PETSC_ARCH
 
 # Define source c file 
 SOURCESC_MatMumpsGetInv	= compute_inverse_MatMumpsGetInverse.c
