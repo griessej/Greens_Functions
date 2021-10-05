@@ -4,10 +4,6 @@
 # which doesn't create any files, but merely depends on the other files
 all: compute_residual_of_inverse
 
-# Set PETSc_dir und arch 
-PETSC_DIR       	= $PETSC_DIR
-PETSC_ARCH      	= $PETSC_ARCH
-
 # Define source c file 
 SOURCESC_Residual	= compute_residual_of_inverse.c
 OBJECTFILE_Residual	= $(SOURCESC_Residual:.c=.o)

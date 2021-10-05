@@ -4,10 +4,6 @@
 # which doesn't create any files, but merely depends on the other files
 all: inverse_MatMumpsGetInverse_indices
 
-# Set PETSc_dir und arch 
-PETSC_DIR       	= $PETSC_DIR
-PETSC_ARCH      	= $PETSC_ARCH
-
 # Define source c file 
 SOURCESC_MatMumpsGetInv	= inverse_MumpsGetInverse_indices.c
 OBJECTFILE_MatMumpsGetInv= $(SOURCESC_MatMumpsGetInv:.c=.o)

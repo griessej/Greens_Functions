@@ -4,10 +4,6 @@
 # which doesn't create any files, but merely depends on the other files
 all: compute_inverse_cholesky
 
-# Set PETSc_dir und arch 
-PETSC_DIR       	= $PETSC_DIR
-PETSC_ARCH      	= $PETSC_ARCH
-
 # Define source c file 
 SOURCESC_cholesky	= compute_inverse_cholesky.c
 OBJECTFILE_cholesky= $(SOURCESC_cholesky:.c=.o)

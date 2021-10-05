@@ -4,10 +4,6 @@
 # which doesn't create any files, but merely depends on the other files
 all: compute_inverse_sparse_rhs
 
-# Set PETSc_dir und arch 
-PETSC_DIR       	= $PETSC_DIR
-PETSC_ARCH      	= $PETSC_ARCH
-
 # Define source c file 
 SOURCESC_MatMatMul_sp 	= compute_inverse_sparse_rhs.c
 OBJECTFILE_MatMatMul_sp	= $(SOURCESC_MatMatMul_sp:.c=.o)
