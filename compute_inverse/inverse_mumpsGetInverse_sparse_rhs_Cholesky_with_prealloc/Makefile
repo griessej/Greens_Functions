@@ -6,16 +6,16 @@ all: compute_inverse_cholesky
 
 # Set PETSc_dir und arch 
 PETSC_DIR       	= $PETSC_DIR
-PETSC_ARCH      	= arch-linux-c-debug-mumps
+PETSC_ARCH      	= $PETSC_ARCH
 
 # Define source c file 
 SOURCESC_cholesky	= compute_inverse_cholesky.c
 OBJECTFILE_cholesky= $(SOURCESC_cholesky:.c=.o)
 
 # Additional flags for PETSc
-CFLAGS 			= -O3 -march=native -mtune=native
-FFLAGS 			= -O3 -march=native -mtune=native
-CPPFLAGS 		= -O3 -march=native -mtune=native
+CFLAGS 			= -O3 
+FFLAGS 			= -O3 
+CPPFLAGS 		= -O3 
 FPPFLAGS 		=
 
 # Include petsc variables and compilation rules 
