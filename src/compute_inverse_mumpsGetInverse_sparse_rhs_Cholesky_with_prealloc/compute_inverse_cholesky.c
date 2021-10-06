@@ -37,6 +37,7 @@ int main(int argc, char **args){
     PetscInt        rhs_col,rhs_row;         // Number of columns and rows on RHS (right-hand side)
     PetscInt        total_nz;                // Number of nonzero values to be pre-allocated in spRHS
     PetscBool       prealloc=PETSC_TRUE;     // Display matrices if set to True otherwise False
+    PetscBook       reorder=PETSC_FALSE;     // Try reordering for zero diagonal (may not actually be supported on Mumps side)
     PetscReal       symtol=PETSC_SQRT_MACHINE_EPSILON;
     MatType mtype;
     MatFactorInfo   factinfo;
@@ -56,6 +57,7 @@ int main(int argc, char **args){
     }
 #else
     ierr = PetscOptionsGetBool(NULL, NULL, "-displ", &displ, NULL);CHKERRQ(ierr);
+    ierr = PetscOptionsGetBool(NULL, NULL, "-reorder", &reorder, NULL);CHKERRQ(ierr);
     ierr = PetscOptionsGetString(NULL, NULL, "-fin" ,inputfile[0], PETSC_MAX_PATH_LEN, &flg);CHKERRQ(ierr);
     if (!flg) {
         SETERRQ(PETSC_COMM_SELF, PETSC_ERR_USER_INPUT, "ERROR: input file must be specified using -fin");
@@ -217,10 +219,12 @@ int main(int argc, char **args){
     //ierr = PetscPrintf(PETSC_COMM_WORLD, "MatFactorInfo.shiftamount:   %f\n", factinfo.shiftamount);CHKERRQ(ierr);
     ierr = PetscPrintf(PETSC_COMM_WORLD, "Computing %i columns and %i rows of the inverse using Cholesky factorization in MUMPS.\n", 
         rhs_col, rhs_row);CHKERRQ(ierr);
-    //ierr = PetscPrintf(PETSC_COMM_WORLD, "Getting ordering isrow/iscol\n");CHKERRQ(ierr);
-    //ierr = MatGetOrdering(A,MATORDERINGNATURAL, &isrow, &iscol);CHKERRQ(ierr);
-    //ierr = PetscPrintf(PETSC_COMM_WORLD, "Reordering for nonzero diagonal\n");CHKERRQ(ierr);
-    //ierr = MatReorderForNonzeroDiagonal(A,1.e-8,isrow,iscol);CHKERRQ(ierr);
+    if (reorder){
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "Getting ordering isrow/iscol\n");CHKERRQ(ierr);
+        ierr = MatGetOrdering(A,MATORDERINGNATURAL, &isrow, &iscol);CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD, "Reordering for nonzero diagonal\n");CHKERRQ(ierr);
+        ierr = MatReorderForNonzeroDiagonal(A,1.e-8,isrow,iscol);CHKERRQ(ierr);
+    }
     ierr = MatGetFactor(A, MATSOLVERMUMPS, MAT_FACTOR_CHOLESKY, &F);CHKERRQ(ierr);
     ierr = PetscPrintf(PETSC_COMM_WORLD, "Performing symbolic Cholesky factorization with MatCholeskyFactorSymbolic\n");CHKERRQ(ierr);
     //ierr = MatCholeskyFactorSymbolic(F, A, iscol, &factinfo);CHKERRQ(ierr);
