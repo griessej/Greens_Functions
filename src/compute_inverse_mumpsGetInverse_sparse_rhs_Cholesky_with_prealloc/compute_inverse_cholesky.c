@@ -37,7 +37,7 @@ int main(int argc, char **args){
     PetscInt        rhs_col,rhs_row;         // Number of columns and rows on RHS (right-hand side)
     PetscInt        total_nz;                // Number of nonzero values to be pre-allocated in spRHS
     PetscBool       prealloc=PETSC_TRUE;     // Display matrices if set to True otherwise False
-    PetscBook       reorder=PETSC_FALSE;     // Try reordering for zero diagonal (may not actually be supported on Mumps side)
+    PetscBool       reorder=PETSC_FALSE;     // Try reordering for zero diagonal (may not actually be supported on Mumps side)
     PetscReal       symtol=PETSC_SQRT_MACHINE_EPSILON;
     MatType mtype;
     MatFactorInfo   factinfo;
