@@ -40,6 +40,7 @@ From: ubuntu:20.04
     python3 -m pip install Cython
     python3 -m pip install numpy
     python3 -m pip install --no-binary mpi4py mpi4py==${SING_MPI4PY_VERSION}
+    python3 -m pip install matscipy
         
     # Bison, Flex and  dh-autoreconf. Needed for PTscotch 
     apt-get -qq update
