@@ -16,9 +16,7 @@ From: pnetcdf-1.12.2_fftw-3.3.9-romio.sif
     git clone -b release https://gitlab.com/petsc/petsc.git /opt/petsc
 
     # Install Petsc: 
-    # - Debugging auf 0 für bessere Performance
-    # - 64-bit-indices=0 nur wenn Slepc auch mit installiert werden soll, 
-    # da ARPACK in Slepc nur mit 32-bit kompiliert werden kann 
+    # - Debugging = 0 for better perfomace. 
     # Allow to perform tests of ompi as root --> Necessary to make tests in Slepc and Petsc
     export OMPI_ALLOW_RUN_AS_ROOT=1 
     export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 
