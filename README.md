@@ -15,4 +15,5 @@ To reproduce the results using the given implementations you need the following 
 
 In the folder "singularity" we provide a .def file for the creation of a Sinuglarity container with all required libaries. 
 
-
+License
+----
