@@ -10,7 +10,7 @@ To reproduce the results using the given implementations you need the following 
 -  **scipy** - http://www.scipy.org/
 -  **PETSc** - https://petsc.org/
 
-We provide a .def file for creating a Sinuglarity container in . 
+In the folder "singularity" we provide a .def file for the creation of a Sinuglarity container with all required libaries. 
 
 
 Workflow for the inversion of test matrices
