@@ -1,5 +1,6 @@
 # Greens_Functions
-# How to compile PETSc and PETSc4py
+# Compilation of PETSc
+
 
 # Workflow for the inversion of test matrices
 * Generate the test matrices with desired shape (number of cols and rows) and desired value for non-zero entries. The matrices are saved in the scipy.sparse.npz format. 
