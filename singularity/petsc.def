@@ -4,6 +4,7 @@ From: ubuntu:20.04
 %post
 
     export OMPI_VERSION=4.0.2 
+    export SING_MPI4PY_VERSION=3.0.3 
 
     ## for apt to be noninteractive
     export DEBIAN_FRONTEND=noninteractive
@@ -38,6 +39,7 @@ From: ubuntu:20.04
     python3 -m pip install pytest
     python3 -m pip install Cython
     python3 -m pip install numpy
+    python3 -m pip install --no-binary mpi4py mpi4py==${SING_MPI4PY_VERSION}
         
     # Bison, Flex and  dh-autoreconf. Needed for PTscotch 
     apt-get -qq update
