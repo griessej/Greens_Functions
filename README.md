@@ -2,7 +2,7 @@ Surface lattice Green’s functions for high-entropy alloys
 ===================
 This repository accompanies the paper "Surface lattice Green’s functions for high-entropy alloys" by Wolfram Nöhring, Jan Grießer, Patrick Dondl and Lars Pastewka. 
 
- - Nöhring, Wolfram Georg, et al. "Surface lattice Green's functions for high-entropy alloys." https://arxiv.org/abs/2101.12519 (2021). 
+ - Nöhring, Wolfram Georg, et al. "Surface lattice Green's functions for high-entropy alloys." (2021). https://arxiv.org/abs/2101.12519 
 
 Dependencies
 ----
